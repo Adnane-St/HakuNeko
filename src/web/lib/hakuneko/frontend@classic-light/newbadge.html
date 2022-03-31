@@ -1,0 +1,119 @@
+<link rel="import" href="../../polymer/polymer-element.html">
+<link rel="import" href="../../polymer/lib/elements/dom-if.html">
+<!-- <link rel="import" href="../../iron-list/iron-list.html"> -->
+<link rel="import" href="connectors.html">
+<link rel="import" href="bookmarks.html">
+<link rel="import" href="status.html">
+<link rel="import" href="theme.html">
+
+
+<dom-module id="hakuneko-newbadge">
+    <!-- <template is="dom-if" if="{{ false }}"> -->
+    <template>
+        <style>
+            .refresh {
+                cursor: pointer;
+                color: var(--manga-refresh-button-color);
+                text-shadow: var(--manga-refresh-button-shadow);
+            }
+
+            .disabled {
+                color: var(--manga-button-disabled-color);
+                cursor: progress !important;
+                /* wait */
+            }
+
+            .green {
+                color: green;
+            }
+
+            .badge-new {
+                display: flex;
+                background: #46484679;
+                align-items: center;
+                justify-content: space-evenly;
+                float:left;
+                height: 19px;
+                box-shadow: -1px 1px 11px 1px #0000004a;
+                margin-right: 9px;
+            }
+        </style>
+        <style include="theme"></style>
+        <div class="badge-new" style$="{{badgeStyle}}">
+            <span class="new-chapters-added" style="float:right">{{ itemLength }}</span>
+            <i class$="{{ getRefreshClass(isUpdating) }}" style$="float:right;{{ iconStyle }}"></i>
+        </div>
+    </template>
+
+    <script>
+        /** @polymerElement */
+        class HakunekoNewBadge extends Polymer.Element {
+            /**
+             *
+             */
+            static get is() {
+                return 'hakuneko-newbadge';
+            }
+
+            /**
+             *
+             */
+            static get properties() {
+                return {
+                    selectedConnector: {
+                        type: Object,
+                        value: undefined,
+                        notify: true, // enable upward data flow,
+                        //readOnly: true, // prevent downward data flow
+                    },
+                    item: {
+                        type: Object,
+                        value: undefined,
+                        notify: true, // enable upward data flow,
+                        //readOnly: true, // prevent downward data flow
+                    }
+                };
+            }
+
+            /**
+             *
+             */
+            ready() {
+                super.ready();
+                this.itemLength = 0;
+                this.isUpdating = false;
+                this.iconStyle = '';
+                this.badgeStyle = '';
+                // setTimeout(()=> this.set('itemLength',10),10000)
+                if (this.selectedConnector.id === "bookmarks") {
+                    this.isUpdating = true;
+                    this.item.inBookmark = true;
+                    this.item.getUpdatedChaptersLength().then(({ isMarked, len, markPosition }) => {
+                        this.isUpdating = false;
+                        if (isMarked) {
+                            this.set('itemLength', len + markPosition)
+                            this.set('iconStyle', (!len) ? '' : 'color:green;')
+                        } else {
+                            this.set('itemLength', '')
+                            this.set('iconStyle', 'display:none;')
+                            this.set('badgeStyle', 'display:none;')
+                        }
+                    })
+                } else {
+                    this.set('itemLength', '')
+                    this.set('iconStyle', 'display:none;')
+                    this.set('badgeStyle', 'display:none;')
+                }
+            }
+            getRefreshClass() {
+                return (this.isUpdating ? 'fas fa-sync fa-pulse refresh' : 'fas fa-star bookmark');
+            }
+            // checkIfBookmark(selected){
+            //     console.log(selected)
+            //     return false;
+            // }
+        }
+        window.customElements.define(HakunekoNewBadge.is, HakunekoNewBadge);
+    </script>
+
+</dom-module>
